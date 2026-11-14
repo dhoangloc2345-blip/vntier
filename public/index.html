@@ -1,1 +1,109 @@
 <!-- VNTIER -->
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VNTIER - Minecraft PvP Ranking</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="header">
+    <a class="logo" href="/">VN<span>TIER</span></a>
+    <nav>
+      <a href="#rankings">Xếp hạng</a>
+      <a href="#tiers">Tier List</a>
+      <a href="#about">Giới thiệu</a>
+    </nav>
+    <button id="loginOpen">ADMIN LOGIN</button>
+  </header>
+
+  <main>
+    <section class="hero">
+      <p>VIETNAM MINECRAFT PVP COMMUNITY</p>
+      <h1>VNTIER<span>.</span></h1>
+      <h2>HỆ THỐNG XẾP HẠNG PVP MINECRAFT</h2>
+      <p>Vietnamese Minecraft PvP Tier Ranking</p>
+      <a href="#rankings">XEM BẢNG XẾP HẠNG ↓</a>
+    </section>
+
+    <section id="rankings" class="section">
+      <h2>BẢNG XẾP HẠNG</h2>
+      <input id="search" placeholder="Tìm kiếm người chơi...">
+      <select id="mode">
+        <option>Sword</option>
+        <option>Axe</option>
+        <option>Crystal</option>
+        <option>UHC</option>
+        <option>SMP</option>
+        <option>Pot</option>
+      </select>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>PLAYER</th>
+            <th>TIER</th>
+            <th>DISCORD</th>
+          </tr>
+        </thead>
+        <tbody id="rows">
+          <tr><td colspan="4">Đang tải...</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="tiers" class="section">
+      <h2>HỆ THỐNG TIER</h2>
+      <div class="tier-box">
+        <p class="lt">LT5 · LT4 · LT3 · LT2 · LT1</p>
+        <p class="mt">MT5 · MT4 · MT3 · MT2 · MT1</p>
+        <p class="ht">HT5 · HT4 · HT3 · HT2 · HT1</p>
+      </div>
+    </section>
+
+    <section id="about" class="section">
+      <h2>ABOUT VNTIER</h2>
+      <p>Nền tảng đánh giá và xếp hạng kỹ năng PvP Minecraft tại Việt Nam.</p>
+    </section>
+  </main>
+
+  <footer>© 2026 VNTIER — ALL RIGHTS RESERVED</footer>
+
+  <div id="modal" class="modal hidden">
+    <div class="dialog">
+      <button id="close">×</button>
+      <h2>ADMIN LOGIN</h2>
+      <form id="loginForm">
+        <input id="password" type="password" placeholder="Admin Password" required>
+        <button type="submit">ĐĂNG NHẬP</button>
+      </form>
+      <p id="loginMsg"></p>
+
+      <div id="adminPanel" class="hidden">
+        <h3>THÊM NGƯỜI CHƠI</h3>
+        <form id="addForm">
+          <input id="playerName" placeholder="Tên người chơi" required>
+          <input id="discord" placeholder="Discord">
+          <select id="playerTier">
+            <option>LT5</option><option>LT4</option>
+            <option>LT3</option><option>LT2</option>
+            <option>LT1</option><option>MT5</option>
+            <option>MT4</option><option>MT3</option>
+            <option>MT2</option><option>MT1</option>
+            <option>HT5</option><option>HT4</option>
+            <option>HT3</option><option>HT2</option>
+            <option>HT1</option>
+          </select>
+          <button type="submit">THÊM</button>
+        </form>
+        <button id="logout">ĐĂNG XUẤT</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+              </html>
+              
