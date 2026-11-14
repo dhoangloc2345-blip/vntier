@@ -1,0 +1,12 @@
+{
+  "players": [
+    {
+      "id": "sample-1",
+      "name": "ExamplePlayer",
+      "discord": "",
+      "tiers": {
+        "Sword": "HT2"
+      }
+    }
+  ]
+}
