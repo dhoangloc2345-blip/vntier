@@ -6,10 +6,8 @@ const $ = (id) => document.getElementById(id);
 let players = [];
 let loggedIn = false;
 
-const modes = ["Sword", "Axe", "Crystal", "UHC", "SMP", "Pot"];
-
 function escapeHTML(value) {
-  return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
     "&": "&amp;",
     "<": "&lt;",
     ">": "&gt;",
@@ -37,51 +35,57 @@ async function api(url, options = {}) {
   return result;
 }
 
-// CSS cho nút xoá
+// Tạo giao diện nút xoá
 function addDeleteStyle() {
-  if (document.getElementById("vntier-delete-style")) return;
+  if ($("deleteStyle")) return;
 
   const style = document.createElement("style");
-  style.id = "vntier-delete-style";
+  style.id = "deleteStyle";
+
   style.textContent = `
     .delete-player-btn {
       background: #dc2626;
       color: white;
       border: none;
       border-radius: 6px;
-      padding: 7px 12px;
-      cursor: pointer;
+      padding: 8px 13px;
       font-weight: bold;
+      cursor: pointer;
     }
 
     .delete-player-btn:hover {
       background: #991b1b;
+    }
+
+    .delete-player-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
   `;
 
   document.head.appendChild(style);
 }
 
-// Thêm tiêu đề cột xoá khi Admin đăng nhập
+// Cập nhật tiêu đề bảng
 function updateTableHeader() {
   const header = document.querySelector("table thead tr");
   if (!header) return;
 
-  const oldHeader = document.getElementById("admin-action-header");
+  let actionHeader = $("adminActionHeader");
 
-  if (loggedIn && !oldHeader) {
-    const th = document.createElement("th");
-    th.id = "admin-action-header";
-    th.textContent = "ACTION";
-    header.appendChild(th);
+  if (loggedIn && !actionHeader) {
+    actionHeader = document.createElement("th");
+    actionHeader.id = "adminActionHeader";
+    actionHeader.textContent = "ACTION";
+    header.appendChild(actionHeader);
   }
 
-  if (!loggedIn && oldHeader) {
-    oldHeader.remove();
+  if (!loggedIn && actionHeader) {
+    actionHeader.remove();
   }
 }
 
-// Render danh sách player
+// Hiển thị danh sách player
 function renderPlayers() {
   const mode = $("mode").value;
   const search = $("search").value.trim().toLowerCase();
@@ -93,15 +97,14 @@ function renderPlayers() {
   ];
 
   const filtered = players
-    .filter(player => {
-      const name = String(player.name || "").toLowerCase();
-      return name.includes(search);
-    })
+    .filter(player =>
+      String(player.name || "").toLowerCase().includes(search)
+    )
     .filter(player => player.tiers && player.tiers[mode])
-    .sort((a, b) => {
-      return tierOrder.indexOf(a.tiers[mode]) -
-             tierOrder.indexOf(b.tiers[mode]);
-    });
+    .sort((a, b) =>
+      tierOrder.indexOf(a.tiers[mode]) -
+      tierOrder.indexOf(b.tiers[mode])
+    );
 
   updateTableHeader();
 
@@ -110,7 +113,9 @@ function renderPlayers() {
         <tr>
           <td>${index + 1}</td>
           <td>${escapeHTML(player.name)}</td>
-          <td><strong>${escapeHTML(player.tiers[mode])}</strong></td>
+          <td>
+            <strong>${escapeHTML(player.tiers[mode])}</strong>
+          </td>
           <td>${escapeHTML(player.discord || "—")}</td>
           ${
             loggedIn
@@ -127,48 +132,14 @@ function renderPlayers() {
           }
         </tr>
       `).join("")
-    : `<tr><td colspan="${loggedIn ? 5 : 4}">Chưa có dữ liệu người chơi.</td></tr>`;
+    : `<tr>
+        <td colspan="${loggedIn ? 5 : 4}">
+          Chưa có dữ liệu người chơi.
+        </td>
+      </tr>`;
 }
 
-// Xoá player
-async function deletePlayer(id, name) {
-  if (!loggedIn) {
-    alert("Bạn cần đăng nhập Admin!");
-    return;
-  }
-
-  const confirmed = confirm(
-    `Bạn có chắc chắn muốn xoá player "${name}" không?\n\nDữ liệu sẽ bị xoá khỏi database.`
-  );
-
-  if (!confirmed) return;
-
-  try {
-    await api(`/api/admin/players/${encodeURIComponent(id)}`, {
-      method: "DELETE"
-    });
-
-    await loadPlayers();
-    alert(`Đã xoá player ${name} thành công!`);
-
-  } catch (error) {
-    alert("Không thể xoá player: " + error.message);
-  }
-}
-
-// Bắt sự kiện nút xoá
-$("rows").addEventListener("click", (event) => {
-  const button = event.target.closest("[data-delete-id]");
-
-  if (!button) return;
-
-  const id = button.dataset.deleteId;
-  const name = button.dataset.playerName;
-
-  deletePlayer(id, name);
-});
-
-// Tải player
+// Tải danh sách player
 async function loadPlayers() {
   try {
     const data = await api("/api/public");
@@ -176,26 +147,73 @@ async function loadPlayers() {
     renderPlayers();
   } catch (error) {
     $("rows").innerHTML =
-      `<tr><td colspan="${loggedIn ? 5 : 4}">Không thể tải dữ liệu.</td></tr>`;
+      `<tr><td colspan="5">Không thể tải dữ liệu.</td></tr>`;
   }
 }
 
-// Tìm kiếm và lọc mode
+// Xoá player
+async function deletePlayer(id, name, button) {
+  if (!loggedIn) {
+    alert("Bạn cần đăng nhập Admin!");
+    return;
+  }
+
+  const confirmed = confirm(
+    `Bạn có chắc chắn muốn xoá ${name} không?\n\nDữ liệu sẽ bị xoá khỏi database!`
+  );
+
+  if (!confirmed) return;
+
+  button.disabled = true;
+  button.textContent = "ĐANG XOÁ...";
+
+  try {
+    await api(
+      `/api/admin/players/${encodeURIComponent(id)}`,
+      { method: "DELETE" }
+    );
+
+    await loadPlayers();
+
+    alert(`Đã xoá ${name} thành công!`);
+  } catch (error) {
+    button.disabled = false;
+    button.textContent = "XOÁ";
+    alert("Lỗi: " + error.message);
+  }
+}
+
+// Bắt sự kiện nút xoá
+$("rows").addEventListener("click", event => {
+  const button = event.target.closest("[data-delete-id]");
+
+  if (!button) return;
+
+  deletePlayer(
+    button.dataset.deleteId,
+    button.dataset.playerName,
+    button
+  );
+});
+
+// Tìm kiếm
 $("search").addEventListener("input", renderPlayers);
+
+// Chọn mode
 $("mode").addEventListener("change", renderPlayers);
 
-// Mở đăng nhập
+// Mở cửa sổ đăng nhập
 $("loginOpen").addEventListener("click", () => {
   $("modal").classList.remove("hidden");
 });
 
-// Đóng đăng nhập
+// Đóng cửa sổ đăng nhập
 $("close").addEventListener("click", () => {
   $("modal").classList.add("hidden");
 });
 
 // Đăng nhập Admin
-$("loginForm").addEventListener("submit", async (event) => {
+$("loginForm").addEventListener("submit", async event => {
   event.preventDefault();
 
   $("loginMsg").textContent = "Đang đăng nhập...";
@@ -213,18 +231,20 @@ $("loginForm").addEventListener("submit", async (event) => {
     $("loginForm").classList.add("hidden");
     $("adminPanel").classList.remove("hidden");
     $("loginMsg").textContent = "Đăng nhập thành công!";
+
     $("password").value = "";
 
     addDeleteStyle();
     renderPlayers();
 
   } catch (error) {
-    $("loginMsg").textContent = "Sai mật khẩu hoặc có lỗi kết nối.";
+    $("loginMsg").textContent =
+      "Sai mật khẩu hoặc có lỗi kết nối.";
   }
 });
 
 // Thêm player
-$("addForm").addEventListener("submit", async (event) => {
+$("addForm").addEventListener("submit", async event => {
   event.preventDefault();
 
   if (!loggedIn) return;
@@ -253,7 +273,7 @@ $("addForm").addEventListener("submit", async (event) => {
 
     await loadPlayers();
 
-    alert("Đã thêm người chơi thành công!");
+    alert("Đã thêm player thành công!");
 
   } catch (error) {
     alert(error.message);
@@ -267,7 +287,7 @@ $("logout").addEventListener("click", async () => {
       method: "POST"
     });
   } catch (error) {
-    // Tiếp tục đóng phiên ở giao diện.
+    console.error(error);
   }
 
   loggedIn = false;
